@@ -8,5 +8,3 @@ adduser anuaimi
 usermod -aG sudo anuaimi
 login anuaimi
 ```
-
-

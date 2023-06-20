@@ -1,0 +1,3 @@
+name: planetiler-test
+runtime: nodejs
+description: use vm to build tiles for world map with planetiler
