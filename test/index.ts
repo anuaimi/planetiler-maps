@@ -3,29 +3,41 @@ import * as digitalocean from "@pulumi/digitalocean";
 
 // slug size - from https://slugs.do-api.dev
 const SLUG_TINY = digitalocean.DropletSlug.DropletS1VCPU1GB;
-const SLUG_BASIC = digitalocean.DropletSlug.DropletS2VCPU4GB_INTEL;
-const SLUG_MEM64 = digitalocean.DropletSlug.DropletM8VCPU64GB;
+// const SLUG_BASIC = digitalocean.DropletSlug.DropletS2VCPU4GB_INTEL;
+// const SLUG_MEM64 = digitalocean.DropletSlug.DropletM8VCPU64GB;
 
-const VOLUME_SIZE = 100
+const DEFAULT_VOLUME_SIZE = 50
 
 export = async () => {
 
+  const cfg = new pulumi.Config();
+  const stackName = pulumi.getStack();
+  
+  // const projectName = cfg.get("projectName") || "map-builder";
+  const projectName = "map-builder-" + stackName;
+  const slugSize = cfg.get("dropletSlug") || SLUG_TINY;
+  const volumeSize = cfg.get("volumeSize") || DEFAULT_VOLUME_SIZE;
+  const sshKeyName = cfg.get("sshKeyName") || "default";
+
   const mySshKey = await digitalocean.getSshKey({
-    name: "anuaimi@devfoundry.com",
+    name: sshKeyName,
   });
 
-  const volume = new digitalocean.Volume("geodata", {
+  const volumeName = "geodata-" + stackName;
+
+  const volume = new digitalocean.Volume(volumeName, {
     region: digitalocean.Region.TOR1,
-    size: VOLUME_SIZE, 
+    size: volumeSize, 
     initialFilesystemType: "ext4",
     description: "map tile data",
   });
   
   // create resources
-  const droplet = new digitalocean.Droplet("planetiler", {
+  const dropletName = "planetiler-" + stackName;
+  const droplet = new digitalocean.Droplet(dropletName, {
     image: "debian-11-x64",
     region: "tor1",
-    size: SLUG_TINY,
+    size: slugSize,
     volumeIds: [volume.id],
     sshKeys: [mySshKey.fingerprint],
     monitoring: true,
@@ -33,12 +45,14 @@ export = async () => {
   });
 
   // create project for these resources
-  const project = new digitalocean.Project( "map-builder", {
+  const project = new digitalocean.Project( projectName, {
       resources: [
         droplet.id.apply(id => `do:droplet:${id}`),
       ],
     }
   );
 
-  return { ip: droplet.ipv4Address };
+  return { 
+    ip: droplet.ipv4Address 
+  };
 }

@@ -1,3 +1,4 @@
-name: planetiler-test
+name: map-builder
 runtime: nodejs
 description: use vm to build tiles for world map with planetiler
+
