@@ -1,6 +1,6 @@
 config:
   digitalocean:token:
     secure: AAABANM5t9hZoEskdEjYTAe+hl4iO/MXqk4RgeLIIgq2QKCRSVcttFI0Ot2bSZI1m6WADOlHVCk0sLnUZu/gHzDZhwwBK6UeCGjOgvuWTepNQ1GJzFfDGW7cybo+euxKZV281m9ILg==
-  map-builder:dropletSlug: digitalocean.DropletSlug.DropletS1VCPU1GB
+  map-builder:dropletSlug: s-1vcpu-1gb
   map-builder:sshKeyName: anuaimi@devfoundry.com
   map-builder:volumeSize: "100"

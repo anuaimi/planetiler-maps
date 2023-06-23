@@ -1,4 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
+import { local, remote, types } from "@pulumi/command";
 import * as digitalocean from "@pulumi/digitalocean";
 
 // slug size - from https://slugs.do-api.dev
@@ -16,8 +17,9 @@ export = async () => {
   // const projectName = cfg.get("projectName") || "map-builder";
   const projectName = "map-builder-" + stackName;
   const slugSize = cfg.get("dropletSlug") || SLUG_TINY;
-  const volumeSize = cfg.get("volumeSize") || DEFAULT_VOLUME_SIZE;
+  const volumeSize = +(cfg.get("volumeSize") || DEFAULT_VOLUME_SIZE);
   const sshKeyName = cfg.get("sshKeyName") || "default";
+
 
   const mySshKey = await digitalocean.getSshKey({
     name: sshKeyName,
@@ -44,6 +46,21 @@ export = async () => {
     ipv6: true,
   });
 
+  const privateKey = new local.Command("cat ssh privatekey", {
+    create: "cat ~/.ssh/id_rsa",
+  });
+
+  const connection: types.input.remote.ConnectionArgs = {
+    host: droplet.ipv4Address,
+    user: "root",
+    privateKey: privateKey.stdout,
+  };
+
+  const hostname = new remote.Command("hostname", {
+    connection,
+    create: "hostname",
+  });
+
   // create project for these resources
   const project = new digitalocean.Project( projectName, {
       resources: [
@@ -53,6 +70,7 @@ export = async () => {
   );
 
   return { 
-    ip: droplet.ipv4Address 
+    ip: droplet.ipv4Address,
+    hostname: hostname
   };
 }
